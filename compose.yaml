@@ -1,0 +1,50 @@
+services:
+  web:
+    build: .
+    container_name: clickclean-web
+    ports:
+      - "8091:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: clickclean_db
+      DB_USER: clickclean_app
+      DB_PASS: ClickClean_ChangeMe_2569!
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    container_name: clickclean-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ChangeThisRootPassword_2569!
+      MYSQL_DATABASE: clickclean_db
+      MYSQL_USER: clickclean_app
+      MYSQL_PASSWORD: ClickClean_ChangeMe_2569!
+    volumes:
+      - clickclean_mysql_data:/var/lib/mysql
+      - ./database/clickclean.sql:/docker-entrypoint-initdb.d/01-clickclean.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pChangeThisRootPassword_2569!"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.3-apache
+    container_name: clickclean-phpmyadmin
+    ports:
+      - "8092:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 16M
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  clickclean_mysql_data:
